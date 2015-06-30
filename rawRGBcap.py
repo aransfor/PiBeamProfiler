@@ -1,6 +1,6 @@
 import time
 import picamera
-iport picamera.array
+import picamera.array
 
 with picamera.PiCamera() as camera:
 	with picamera.array.PiRGBArray(camera) as stream:
