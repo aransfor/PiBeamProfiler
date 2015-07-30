@@ -15,7 +15,7 @@ class BeamProfiler(QtGui.QWidget):
 
 	def __init__(self):
 		super(BeamProfiler, self).__init__()
-		self.camera = picamera.Picamera()
+		self.camera = picamera.PiCamera()
 		print self.camera
 		self.output = picamera.array.PiRGBArray(camera)
 		self.initializeGUI()

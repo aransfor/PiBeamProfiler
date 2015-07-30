@@ -10,14 +10,22 @@ import scipy.optimize as opt
 from scipy.stats import norm
 from matplotlib import pyplot as plt
 from matplotlib import dates, ticker
+import beam_profiler_XP as bp
+import XP_g2d as g2d
 
 class BeamProfiler(QtGui.QWidget):
 
 	def __init__(self):
 		super(BeamProfiler, self).__init__()
-		self.camera = picamera.PiCamera()
-		print self.camera
-		self.output = picamera.array.PiRGBArray(camera)
+		self.image_data = bp()
+		self.Gauss2D = None
+		self._rho = 50
+		self._x0 = 30
+		self._y0 = 20
+		self._w_a = 9
+		self._w_b = 7
+		self.row_sum = None
+		self.col_sum = None
 		self.initializeGUI()
 
 	def initializeGUI(self):
@@ -27,110 +35,47 @@ class BeamProfiler(QtGui.QWidget):
 		self.setWindowTitle('Beam Profiler')
 		layout = QtGui.QGridLayout()
 		from matplotlib import pyplot as plt
-		captureimage  = QtGui.QPushButton('Capture Image')
-		get1DnormX    = QtGui.QPushButton('Show a 1D Gaussian in the X')
-		get1DnormY    = QtGui.QPushButton('Show a 1D Gaussian in the Y')
-		get2Dnorm     = QtGui.QPushButton('Show a 2D Gaussian')
-		#changeres     = QtGui.QPushButton('Change Resolution')
+		captureFitImage  = QtGui.QPushButton('Capture and Fit Image')
+		get1DnormX       = QtGui.QPushButton('Show a 1D Gaussian in the X')
+		get1DnormY       = QtGui.QPushButton('Show a 1D Gaussian in the Y')
+		getImage         = QtGui.QPushButton('Show the Image')
+		getData          = QtGui.QPushButton('Show Gaussian Fit Data')
+		#changeres        = QtGui.QPushButton('Change Resolution')
 		
-		captureimage.clicked.connect(self.captureimage)
-		get1DnormX.clicked.connect(self.norm1D('x'))
-		get1DnormY.clicked.connect(self.norm1D('y'))
-		get2Dnorm.clicked.connect(self.norm2D)
+		captureFitImage.clicked.connect(self.capturefitimage)
+		get1DnormX.clicked.connect(self.norm1D_x)
+		get1DnormY.clicked.connect(self.norm1D_y)
+		getImage.clicked.connect(self.image)
+		getData.clicked.connect(self.data)
 		#changeres.clicked.connect(self.changeres)
 		
-		layout.addWidget(captureimage    ,0,0)
-		layout.addWidget(get1DnormX      ,1,0)
-		layout.addWidget(get1DnormY      ,2,0)
-		layout.addWidget(get2Dnorm       ,3,0)
-		#layout.addWidget(changeres       ,5,0)
+		layout.addWidget(captureFitImage    ,0,0)
+		layout.addWidget(get1DnormX         ,1,0)
+		layout.addWidget(get1DnormY         ,2,0)
+		layout.addWidget(getImage           ,3,0)
+		layout.addWidget(getData            ,4,0)
+		#layout.addWidget(changeres          ,5,0)
 		
 		self.setLayout(layout)
 
-	def captureimage(self):
-		camera.capture(output, 'rgb')
-		print('Captured %dx%d image' % (self.output.array.shape[1], self.output.array.shape[0]))
-		'''DATA CAPTURED-->SEND TO FIT
-		'''
-		#What do we want to fit?
-		norm1D('x')
-		norm1D('y')
-		norm2D()
+	def capturefitimage(self):
+		self.image_data.take_image(a_res, b_res, shutter)
+		self.Gauss2D = g2d.Gaussian2D(self.image_date.array, rho=self._rho, x0=self._x0, y0=self._y0, _w_a=self._w_a, w_b=self._w_b)
+		self.row_sum = [sum(self.image_data.array[:,i]) for i in xrange(len(self.image_data.array[0]))]
+		self.col_sum = [sum(self.image_data.array[i,:]) for i in xrange(len(self.image_data.array[1]))]
 
-	def norm1D(self, axis):
-		'''
-		#Generate some data
-		data = norm.rvs(10.0, 2.5, size=500)
-		'''
-		#Fit a normal distribution
-		''' This line may not work, my guess is that output is a rank 2 array, first axis is X and second axis is Y, or vice-versa '''
-		print self.camera
-		mu, std = norm.fit(self.output)
+	def norm1D_x(self):
+		pylab.plot(self.row_sum)
+		pylab.show()
 
-		#Plot the histogram
-		plt.hist(data, bins=25, normed=True, alpha=0.6, color='g')
+	def norm1D_y(self):
+		pylab.plot(self.col_sum)
+		pylab.show()
 
-		#Plot the PDF
-		xmin, xmax = plt.xlim()
-		x = np.linspace(xmin, xmax, 100)
-		p = norm.pdf(x, mu, std)
-		plt.plot(x, p, 'k', linewidth=2)
-		title = "Fit results: mu = %.2f, std = %.2f" % (mu, std)
-		plt.title(title)
+	def image(self):
+		self.image_data.image.show()
 
-		plt.show()
-
-	def norm2D(self):
-		#Create x and y indices
-		x = np.linspace(0, 200, 201)
-		y = np.linspace(0, 200, 201)
-		x, y = np.meshgrid(x, y)
-
-		#Create data
-		data = twoD_Gaussian((x, y), 3, 100, 100, 20, 40, 0, 10)
-		#print data
-
-		#Plot twoD_Gaussian data generated above
-		plt.figure()
-		plt.imshow(data.reshape(201, 201))
-		plt.colorbar()
-
-		#Add some noise to the data and try to fit the data generated beforehand
-		initial_guess = (3, 100, 100, 20, 40, 0, 10)
-
-		data_noisy = data + 0.2*np.random.normal(size=data.shape)
-
-		popt, pcov = opt.curve_fit(twoD_Gaussian, (x, y), data_noisy, p0=initial_guess)
-		#print popt
-
-		#Plot the results
-		data_fitted = twoD_Gaussian((x, y), *popt)
-
-		fig, ax = plt.subplots(1, 1)
-		ax.hold(True)
-		ax.imshow(data_noisy.reshape(201, 201), cmap=plt.cm.jet, origin='bottom', extent=(x.min(), x.max(), y.min(), y.max()))
-		ax.contour(x, y, data_fitted.reshape(201, 201), 8, colors='w')
-
-		plt.show()
-
-
-	def sumColRow(self, data, choice):
-		"""This will sum over the column or the row"""
-		result = data.sum(axis=choice)
-		#print(result)
-		return result
-
-	#define model function and pass independent variables x and y as a list
-	def twoD_Gaussian(self, (x,y), amplitude, xo, yo, sigma_x, sigma_y, theta, offset):
-        	xo = float(xo)
-        	yo = float(yo)
-        	a = (np.cos(theta)**2)/(2*sigma_x**2) + (np.sin(theta)**2)/(2*sigma_y**2)
-        	b = -(np.sin(2*theta))/(4*sigma_x**2) + (np.sin(2*theta))/(4*sigma_y**2)
-        	c = (np.sin(theta)**2)/(2*sigma_x**2) + (np.cos(theta)**2)/(2*sigma_y**2)
-        	g = offset + amplitude*np.exp( - (a*((x-xo)**2) + 2*b*(x-xo)*(y-yo) + c*((y-yo)**2)))
-
-	        return g.ravel()
-
+	def data(self):
 
 
 if __name__ == "__main__":
