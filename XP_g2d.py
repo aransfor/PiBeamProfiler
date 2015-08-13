@@ -17,17 +17,22 @@ class Gaussian2D(object):
         self.w_a = None  # long axis length in pixels
         self.w_b = None  # short axis length in pixels
         self.rho = None  # amplitude of 2D Gaussian
+
         self.x0_err = None
         self.y0_err = None
         self.w_a_err = None
         self.w_b_err = None
         self.rho_err = None
+
+	self.x0_len = None
+	self.y0_len = None
 	self.w_a_len = None
 	self.w_b_len = None
 
 	self.pixel_size = 0.0000014
 	self.a_pixel_len = 2592
 	self.b_pixel_len = 1944
+	self.pixel_res = 100
 
         if data is None:
             print "Please load data."
@@ -82,8 +87,10 @@ class Gaussian2D(object):
         self.w_a_err = _n.sqrt(pcov[3][3])
         self.w_b_err = _n.sqrt(pcov[4][4])
 
-	self.w_a_len = 100 * self.pixel_size * self.w_a
-	self.w_b_len = 100 * self.pixel_size * self.w_b
+	self.x0_len = 25.92 * self.pixel_size * self.x0 * 1000
+	self.y0_len = 19.44 * self.pixel_size * self.y0 * 1000
+	self.w_a_len = 25.92 * self.pixel_size * self.w_a * 1000
+	self.w_b_len = 19.44 * self.pixel_size * self.w_b * 1000
 
     def _twoD_Gaussian(self, (x, y), rho, x0, y0, w_a, w_b):
         """
