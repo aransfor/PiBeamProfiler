@@ -7,8 +7,8 @@ class BeamProfiler(object):
 	def __init__(self):
 		self.a_res = 100
 		self.b_res = 100
-		self.shutter_default = 40
-		self.shutter = 40
+		self.shutter_default = 250
+		self.shutter = 250
 		self.iso = 100
 
 	def take_image(self, filename='beam_image.jpg'):
@@ -25,8 +25,11 @@ class BeamProfiler(object):
 
 	def take_image_preview(self, filename='beam_image.jpg'):
 		with p.PiCamera() as c:
-			c.see_preview()
 			c.shutter_speed = self.shutter
+			c.resolution = (self.a_res, self.b_res)
+			c.start_preview()
+			raw_input("Press enter to capture...")
+			c.stop_preview()
 			c.capture(filename)
 		image = Image.open(filename)
 		image = image.convert('LA')
@@ -38,52 +41,42 @@ class BeamProfiler(object):
 		with p.PiCamera() as c:
 			c.resolution = (self.a_res, self.b_res)
 			c.start_preview()
-			raw_input("Press enter to capture...")
+			raw_input("Press enter to continue...")
 			c.stop_preview()
 
-	def test(self):
-		self.shutter = 40
-		count = 0
-		while count < 100:
-			image = self.take_image()
-			maximum = np.amax(self.array)
-			print 'shutter: ', self.shutter, '....maximum: ', maximum
-			count = count + 1
-			self.shutter = self.shutter + 100
-
-	def calibrate_shutter_simple(self):
-		self.shutter = self.shutter_default
-		im0 = self.take_image()
-		max_pix0 = np.amax(self.array_raw)
-		cal = False
-		if max_pix0 == 255:
-			while cal is False:
-				self.shutter = self.shutter - 10
-				print 'decreasing shutter speed --> ', self.shutter
-				im1 = self.take_image()
-				max_pix1 = np.amax(self.array_raw)
-				print 'max pixel value = ', max_pix1
-				if max_pix1 < 255 and max_pix1 >= 0:
-					cal = True
-				elif max_pix1 > 255:
-					print 'ERROR'
-					break
-		elif max_pix0 < 240 and max_pix0 >= 0:
-			while cal is False:
-				self.shutter = self.shutter + 1
-				print 'increasig shutter speed --> ', self.shutter
-				im1 = self.take_image()
-				max_pix1 = np.amax(self.array_raw)
-				print 'max pixel value = ', max_pix1
-				if max_pix1 < 240 and max_pix1 >= 0:
-					cal = True
-				elif max_pix1 > 255:
-					print 'ERROR'
-					break
-		else:
-			print 'ERROR'
-		return self.shutter
-
+#	def calibrate_shutter_simple(self):
+#		self.shutter = self.shutter_default
+#		im0 = self.take_image()
+#		max_pix0 = np.amax(self.array_raw)
+#		cal = False
+#		if max_pix0 == 255:
+#			while cal is False:
+#				self.shutter = self.shutter - 10
+#				print 'decreasing shutter speed --> ', self.shutter
+#				im1 = self.take_image()
+#				max_pix1 = np.amax(self.array_raw)
+#				print 'max pixel value = ', max_pix1
+#				if max_pix1 < 255 and max_pix1 >= 0:
+#					cal = True
+#				elif max_pix1 > 255:
+#					print 'ERROR'
+#					break
+#		elif max_pix0 < 240 and max_pix0 >= 0:
+#			while cal is False:
+#				self.shutter = self.shutter + 1
+#				print 'increasig shutter speed --> ', self.shutter
+#				im1 = self.take_image()
+#				max_pix1 = np.amax(self.array_raw)
+#				print 'max pixel value = ', max_pix1
+#				if max_pix1 < 240 and max_pix1 >= 0:
+#					cal = True
+#				elif max_pix1 > 255:
+#					print 'ERROR'
+#					break
+#		else:
+#			print 'ERROR'
+#		return self.shutter
+#
 #	def calibrate_shutter
 #		with p.PiCamera() as c:
 #			c.resolution = (self.a_res, self.b_res)

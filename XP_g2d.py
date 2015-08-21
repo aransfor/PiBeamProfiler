@@ -12,11 +12,11 @@ class Gaussian2D(object):
     2D Gaussian class
     """
     def __init__(self, data, **kwargs):
-        self.x0 = None  # center column
-        self.y0 = None  # center row
-        self.w_a = None  # long axis length in pixels
-        self.w_b = None  # short axis length in pixels
-        self.rho = None  # amplitude of 2D Gaussian
+        self.x0 = 50  # center column
+        self.y0 = 30  # center row
+        self.w_a = 20  # long axis length in pixels
+        self.w_b = 9  # short axis length in pixels
+        self.rho = 7  # amplitude of 2D Gaussian
 
         self.x0_err = None
         self.y0_err = None
