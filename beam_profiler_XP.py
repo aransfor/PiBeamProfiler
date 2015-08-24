@@ -4,13 +4,15 @@ import numpy as np
 import time
 
 class BeamProfiler(object):
+	"""Beam Profiler class"""
 	def __init__(self):
 		self.a_res = 100
 		self.b_res = 100
 		self.shutter_default = 250
 		self.shutter = 250
 		self.iso = 100
-
+	
+	"""Takes an image and prepares image data for fitting"""
 	def take_image(self, filename='beam_image.jpg'):
 		with p.PiCamera() as c:
 			c.resolution = (self.a_res, self.b_res)
@@ -23,6 +25,7 @@ class BeamProfiler(object):
 		self.array = self.array_raw[:, 0].reshape(self.a_res, self.b_res)
 		self.image = Image.fromarray(self.array)
 
+	"""Starts with a preview, then takes an image and prepares image data for fitting"""
 	def take_image_preview(self, filename='beam_image.jpg'):
 		with p.PiCamera() as c:
 			c.shutter_speed = self.shutter
@@ -37,6 +40,7 @@ class BeamProfiler(object):
 		self.array = array[:, 0].reshape(self.a_res, self.b_res)
 		self.image = Image.fromarray(self.array) 
 
+	"""Starts a preview"""
 	def see_preview(self):
 		with p.PiCamera() as c:
 			c.resolution = (self.a_res, self.b_res)
@@ -44,6 +48,10 @@ class BeamProfiler(object):
 			raw_input("Press enter to continue...")
 			c.stop_preview()
 
+#	"""
+#	The work in progress on an algorithm that optimizes the shutter speed 
+#	based on minimizing the number of pixels that are maxed out
+#	"""
 #	def calibrate_shutter_simple(self):
 #		self.shutter = self.shutter_default
 #		im0 = self.take_image()
