@@ -80,10 +80,10 @@ class Gaussian2D(object):
         self._w_a_err = _n.sqrt(pcov[3][3])
         self._w_b_err = _n.sqrt(pcov[4][4])
 
-	self._x0_pos = 25.92 * self.pixel_size * self._x0 * 1000
-	self._y0_pos = 19.44 * self.pixel_size * self._y0 * 1000
-	self._w_a_len = 25.92 * self.pixel_size * self._w_a * 1000
-	self._w_b_len = 19.44 * self.pixel_size * self._w_b * 1000
+	#self._x0_pos = 25.92 * self._pixel_size * self._x0 * 1000
+	#self._y0_pos = 19.44 * self._pixel_size * self._y0 * 1000
+	self._w_a_len = 25.92 * self._pixel_size * self._w_a * 1000
+	self._w_b_len = 19.44 * self._pixel_size * self._w_b * 1000
 
     def _twoD_Gaussian(self, (x, y), rho, x0, y0, w_a, w_b):
         """

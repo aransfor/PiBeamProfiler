@@ -7,9 +7,13 @@ import numpy as np
 
 beamProfiler=bp()
 
-for i in range (0,100):
+for i in range (0,1):
 	"""Preview, and take image"""
 	beamProfiler.take_image_preview()
+
+	'''Find max'''
+	max_img = np.amax(beamProfiler.image_raw)
+	print max_img
 
 	"""Fit image data to Gaussian"""
 	Gauss2D = g2d.Gaussian2D(beamProfiler.array)
