@@ -1,3 +1,12 @@
+"""
+Camera Deatils:
+1.4um x 1.4um pixel dimension
+2592 x 1944 pixels
+ISO Values: Takes 0-1600 (where 0 is auto), but will round user input to closest number of the following:
+		100, 200, 320, 400, 500, 640, 800
+Shutter Values: In milliseconds (where 0 is auto)
+"""
+
 import picamera as p
 from PIL import Image
 import numpy as np
@@ -8,41 +17,48 @@ class BeamProfiler(object):
 	def __init__(self):
 		self.a_res = 100
 		self.b_res = 100
-		self.shutter_default = 250
-		self.shutter = 250
+		self.shutter_default = 100
+		self.shutter = 100
 		self.iso = 100
 	
-	def take_image(self, filename='beam_image.jpg'):
+	def take_image(self, shutter, iso, filename='beam_image.jpg'):
 		"""Takes an image and prepares image data 
 		for fitting"""
 		with p.PiCamera() as c:
 			c.resolution = (self.a_res, self.b_res)
+			self.shutter = shutter
+			self.iso = iso
 			c.shutter_speed = self.shutter
+			print 'shutter speed = ', self.shutter
 			c.iso = self.iso
+			print 'iso           = ', self.iso
 			c.capture(filename)
 		image = Image.open(filename)
-		self.image_raw = image
 		image = image.convert('LA')
-		self.array_raw = np.array(list(image.getdata()))
-		self.array = self.array_raw[:, 0].reshape(self.a_res, self.b_res)
-		self.image = Image.fromarray(self.array)
+		self.image_array = np.array(list(image.getdata()))
+		self.pixel_array = self.image_array[:, 0].reshape(self.a_res, self.b_res)
+		self.image = Image.fromarray(self.pixel_array)
 
-	def take_image_preview(self, filename='beam_image.jpg'):
+	def take_image_preview(self, shutter, iso, filename='beam_image.jpg'):
 		"""Starts with a preview, then takes an image and 
 		prepares image data for fitting"""
 		with p.PiCamera() as c:
-			c.shutter_speed = self.shutter
 			c.resolution = (self.a_res, self.b_res)
+			self.shutter = shutter
+			self.iso = iso
+			c.shutter_speed = self.shutter
+			print 'shutter speed = ', self.shutter
+			c.iso = self.iso
+			print 'iso           = ', self.iso
 			c.start_preview()
 			raw_input("Press enter to capture...")
 			c.stop_preview()
 			c.capture(filename)
 		image = Image.open(filename)
-		self.image_raw = image
 		image = image.convert('LA')
-		array = np.array(list(image.getdata()))
-		self.array = array[:, 0].reshape(self.a_res, self.b_res)
-		self.image = Image.fromarray(self.array) 
+		self.image_array = np.array(list(image.getdata()))
+		self.pixel_array = self.image_array[:, 0].reshape(self.a_res, self.b_res)
+		self.image = Image.fromarray(self.pixel_array)
 
 	def see_preview(self):
 		"""Starts a preview"""
