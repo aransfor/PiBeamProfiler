@@ -40,6 +40,8 @@ class Gaussian2D(object):
 	self._y0_pos = None
 	self._w_a_len = None
 	self._w_b_len = None
+	self._w_a_pix = None
+	self._w_b_pix = None
 
 	"""Values based on resolution of image"""
 	self._pixel_size = 0.0000014
@@ -80,8 +82,8 @@ class Gaussian2D(object):
         self._w_a_err = _n.sqrt(pcov[3][3])
         self._w_b_err = _n.sqrt(pcov[4][4])
 
-	#self._x0_pos = 25.92 * self._pixel_size * self._x0 * 1000
-	#self._y0_pos = 19.44 * self._pixel_size * self._y0 * 1000
+	self._w_a_pix = 25.92 * self._w_a
+	self._w_b_pix = 19.44 * self._w_b 
 	self._w_a_len = 25.92 * self._pixel_size * self._w_a * 1000
 	self._w_b_len = 19.44 * self._pixel_size * self._w_b * 1000
 
