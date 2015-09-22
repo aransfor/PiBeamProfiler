@@ -9,7 +9,7 @@ Shutter Values: In milliseconds (where 0 is auto)
 
 import picamera as p
 from PIL import Image
-from matplotlib import pylab as pylab
+import matplotlib.pyplot as plt
 import numpy as np
 import time
 
@@ -60,7 +60,7 @@ class BeamProfiler(object):
 		self.image_array = np.array(list(image.getdata()))
 		self.pixel_array = self.image_array[:, 0].reshape(self.a_res, self.b_res)
 		self.image = Image.fromarray(self.pixel_array)
-		self.col_sum = self.pixel_array.sum(axis=0)
+		self.column_sum = self.pixel_array.sum(axis=0)
 		self.row_sum = self.pixel_array.sum(axis=1)
 
 	def see_preview(self):
@@ -71,13 +71,15 @@ class BeamProfiler(object):
 			raw_input("Press enter to continue...")
 			c.stop_preview()
 	
-	def col_sum_plot(self):
-		pylab.plot(self.col_sum)
-		pylab.show()
+	def plot_column_sum (self):
+		"""Creates a plot of the column sum of pixel data"""
+		plt.plot(self.column_sum)
+		plt.show()
 	
-	def row_sum_plot(self):
-		pylab.plot(self.row_sum)
-		pylab.show()
+	def plot_row_sum (self):
+		"""Creates a plot of the row sum of pixel data"""
+		plt.plot(self.row_sum)
+		plt.show()
 
 #	"""
 #	The work in progress on an algorithm that optimizes the shutter speed 
