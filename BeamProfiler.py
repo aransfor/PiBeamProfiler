@@ -58,12 +58,12 @@ class profiler(QtGui.QWidget):
 
         self.axrow.set_xlim(0, 480)
 	self.axrow.set_ylim(0,100)
-	self.axrow.set_aspect(0.142857)
+	self.axrow.set_aspect(0.33333)
 	self.axrow.patch.set_visible(False)
 
         self.axcolumn.set_xlim(0, 100)
 	self.axcolumn.set_ylim(0,480)
-	self.axcolumn.set_aspect(7)
+	self.axcolumn.set_aspect(3)
 	self.axcolumn.patch.set_visible(False)
 
         #Other stuff
