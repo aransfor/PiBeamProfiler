@@ -8,6 +8,7 @@ from PyQt4 import QtGui
 import matplotlib.pyplot as plt
 import numpy as np
 from scipy.misc.pilutil import toimage
+from scipy.optimize import curve_fit
 from PIL.ImageQt import ImageQt
 import time, sys
 import cv2
@@ -21,6 +22,9 @@ class profiler(QtGui.QWidget):
 	self.maxresolution = [640, 480]
 	self.camera.resolution = (640, 480)
 	self.camera.framerate = 33
+	self.camera.shutter_speed = 500
+	self.camera.exposure_mode = 'off'
+	self.camera.iso = 300
 	self.rawCapture = PiRGBArray(self.camera, size=(640, 480))
 	self.running = True
 	self.zoom = 0.1
@@ -43,12 +47,16 @@ class profiler(QtGui.QWidget):
 	self.figurerow.gca().set_position([0,0,1,1])
 	self.figurecolumn.gca().set_position([0,0,1,1])
 
-        self.linesrow, = self.axrow.plot([],[])
-        self.linescolumn, = self.axcolumn.plot([],[])
-	
+        self.linesrow, = self.axrow.plot([],[],linewidth=2,color='purple')
+        self.linesrowfit, = self.axrow.plot([],[],linestyle='--',linewidth=2,color='yellow')
+        self.linescolumn, = self.axcolumn.plot([],[],linewidth=2,color='purple')
+	self.linescolumnfit, = self.axcolumn.plot([],[],linestyle='--',linewidth=2,color='yellow')	
+
 	self.axcolumn.xaxis.set_ticks_position('none')
 	self.axrow.xaxis.set_ticks_position('none')
+
 	self.axcolumn.yaxis.set_ticks_position('none')
+
 	self.axrow.yaxis.set_ticks_position('none')
 
 	self.axcolumn.get_xaxis().set_visible(False)
@@ -56,7 +64,7 @@ class profiler(QtGui.QWidget):
 	self.axrow.get_xaxis().set_visible(False)
 	self.axrow.get_yaxis().set_visible(False)
 
-        self.axrow.set_xlim(0, 480)
+        self.axrow.set_xlim(0, 640)
 	self.axrow.set_ylim(0,100)
 	self.axrow.set_aspect(0.33333)
 	self.axrow.patch.set_visible(False)
@@ -71,6 +79,8 @@ class profiler(QtGui.QWidget):
 	#self.axcolumn.grid([5,1])
         self.canvasrow = FigureCanvas(self.figurerow)
 	self.canvascolumn = FigureCanvas(self.figurecolumn)
+	self.xwaist = QtGui.QLabel()
+	self.ywaist = QtGui.QLabel()
 	self.zoominbutton = QtGui.QPushButton('+')
 	self.zoomoutbutton = QtGui.QPushButton('-')
 
@@ -90,7 +100,10 @@ class profiler(QtGui.QWidget):
 
         layout.addWidget(self.videowindow  ,0,0,5,5)
         layout.addWidget(self.zoominbutton  ,4,11,1,1)
-        layout.addWidget(self.zoomoutbutton  ,4,9,1,1)
+        layout.addWidget(self.xwaist  ,3,9,1,1)
+        layout.addWidget(self.ywaist  ,3,10,1,1)
+
+	layout.addWidget(self.zoomoutbutton  ,4,9,1,1)
 
         layout.addWidget(self.panupbutton  ,0,10,1,1)
         layout.addWidget(self.pandownbutton  ,2,10,1,1)
@@ -115,15 +128,32 @@ class profiler(QtGui.QWidget):
 		data = greenimage
 		columnsum = data.sum(axis=1)
 		rowsum = data.sum(axis=0)
+		columnsum = columnsum - np.min(columnsum)
+		rowsum = rowsum - np.min(rowsum)
+		columnsum = columnsum*85/columnsum.max()
+		rowsum = rowsum*85/rowsum.max()
+
+		popt1, pcov1 = curve_fit(self.func, xpixels, rowsum, p0=[80,300,50])
+		popt2, pcov2 = curve_fit(self.func, ypixels, columnsum[::-1], p0=[80,240,50])
 
         	self.linesrow.set_xdata(xpixels)
-        	self.linesrow.set_ydata(rowsum/480)
+        	self.linesrow.set_ydata(rowsum)
+
+        	self.linesrowfit.set_xdata(xpixels)
+        	self.linesrowfit.set_ydata(self.func(xpixels, popt1[0],popt1[1],popt1[2]))
+		self.xwaist.setText('X waist = ' + str(np.abs(popt1[2]*2*5.875))[0:5] + 'um')
+		self.ywaist.setText('Y waist = ' +str(np.abs(popt2[2]*2*5.875))[0:5]  + 'um')
+        	#self.linesrow.set_ydata(self.func(xpixels, popt[0],popt[1],popt[2]))
         	self.figurerow.canvas.draw()
         	self.figurerow.canvas.flush_events()
         	#self.canvasrow.draw()
 
-        	self.linescolumn.set_xdata(columnsum/480)
+        	self.linescolumn.set_xdata(columnsum[::-1])
         	self.linescolumn.set_ydata(ypixels)
+
+        	self.linescolumnfit.set_xdata(self.func(ypixels, popt2[0],popt2[1],popt2[2]))
+        	self.linescolumnfit.set_ydata(ypixels)
+
         	self.figurecolumn.canvas.draw()
         	self.figurecolumn.canvas.flush_events()
         	#self.canvascolumn.draw()
@@ -156,6 +186,9 @@ class profiler(QtGui.QWidget):
     	qImage = QtGui.QImage(qtImage)
     	qPixmap = QtGui.QPixmap(qImage)
     	return qPixmap
+
+    def func(self, x, a, x0, sigma):
+   	return a*np.exp(-(x-x0)**2/(2*sigma**2))
 
 
 if __name__ == "__main__":
