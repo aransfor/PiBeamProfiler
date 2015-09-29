@@ -188,8 +188,6 @@ class profiler(QtGui.QWidget):
  
 		# clear the stream in preparation for the next frame
 		self.rawCapture.truncate(0)
-		if not self.running:
-			break
 
     #to be added
     def zoomin(self):
