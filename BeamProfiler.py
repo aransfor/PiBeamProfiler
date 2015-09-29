@@ -18,7 +18,7 @@ import matplotlib.pyplot as plt
 from picamera.array import PiRGBArray
 from picamera import PiCamera
 from PIL.ImageQt import ImageQt
-from PyQt4 import QtGui
+from PyQt4 import QtGui, QtCore
 import numpy as np
 from scipy.misc.pilutil import toimage
 from scipy.optimize import curve_fit
@@ -48,9 +48,12 @@ class profiler(QtGui.QWidget):
 
     def initializeGUI(self):
 	#set main geometry and title
-        self.setGeometry(400, 150, 650, 550)
+        #self.setGeometry(0, 0, 1000, 500)
+	self.resize(480,310)
+	self.move(0,0)
         self.setWindowTitle('Beam Profiler')
         layout = QtGui.QGridLayout()
+	layout.setSpacing(10)
 
         #Set up plot axes and figure positions
         self.figurerow, self.axrow = plt.subplots()
@@ -81,19 +84,27 @@ class profiler(QtGui.QWidget):
 
 	#set plot limits and aspect ratios
         self.axrow.set_xlim(0, 640)
-	self.axrow.set_ylim(0,100)
-	self.axrow.set_aspect(0.33333)
+	self.axrow.set_ylim(0,150)
+	self.axrow.set_aspect(0.333)
 
-        self.axcolumn.set_xlim(0, 100)
+        self.axcolumn.set_xlim(0, 150)
 	self.axcolumn.set_ylim(0,480)
 	self.axcolumn.set_aspect(3)
 
         #Create canvas, label and button widgets
+	self.expslider = QtGui.QSlider(QtCore.Qt.Vertical)
+	self.expslider.setSingleStep(1)
+	self.explabel = QtGui.QLabel('Exposure')
+	
+	self.expbar = QtGui.QProgressBar()
+	self.expbar.setOrientation(QtCore.Qt.Vertical)
+	
         self.canvasrow = FigureCanvas(self.figurerow)
 	self.canvascolumn = FigureCanvas(self.figurecolumn)
 
 	self.videowindow = QtGui.QLabel()
-
+	self.videowindow.setMaximumHeight(220)
+	self.videowindow.setMaximumWidth(380)
 	self.xwaist = QtGui.QLabel()
 	self.ywaist = QtGui.QLabel()
 
@@ -101,28 +112,35 @@ class profiler(QtGui.QWidget):
 	self.zoomoutbutton = QtGui.QPushButton('-')
 	
 	#fixes sizes for display widgets
-	self.videowindow.resize(640,480)
 
-	self.canvasrow.setMinimumHeight(50)
-	self.canvasrow.setMaximumHeight(50)
+	self.canvasrow.setMinimumHeight(30)
+	self.canvasrow.setMaximumHeight(30)
+	self.canvasrow.setMinimumWidth(380)
+	self.canvasrow.setMaximumWidth(380)
 
-	self.canvascolumn.setMinimumWidth(50)
-	self.canvascolumn.setMaximumWidth(50)
+	self.canvascolumn.setMinimumWidth(30)
+	self.canvascolumn.setMaximumWidth(30)
 
 	#add widgets to layout grid
-        layout.addWidget(self.canvasrow,      4,0,3,5)
-        layout.addWidget(self.canvascolumn,   0,5,5,3)
+#	layout.addWidget(self.explabel,       0,8,1,1)
+#        layout.addWidget(self.expslider,      1,8,1,3)
+#        layout.addWidget(self.expbar,         1,9,1,3)
 
-        layout.addWidget(self.videowindow,    0,0,5,5)
+        layout.addWidget(self.videowindow,    0,0,5,3)
+        layout.addWidget(self.canvasrow,      4,0,4,1)
+        layout.addWidget(self.canvascolumn,   0,4,3,1)
 
-        layout.addWidget(self.zoominbutton,   4,9,1,1)
-	layout.addWidget(self.zoomoutbutton,  4,7,1,1)
+#        layout.addWidget(self.zoominbutton,   5,9,1,1)
+#	layout.addWidget(self.zoomoutbutton,  5,7,1,1)
 
-        layout.addWidget(self.xwaist,         3,7,1,1)
-        layout.addWidget(self.ywaist,         3,9,1,1)
+#        layout.addWidget(self.xwaist,         5,7,1,1)
+#        layout.addWidget(self.ywaist,         6,7,1,1)
 
 	#connect buttons to functions
         self.zoominbutton.toggled.connect(self.zoomin) 
+	self.expslider.valueChanged[int].connect(self.changeExposure)
+
+	self.changeExposure(0)
 
 	#set layout
         self.setLayout(layout)
@@ -136,6 +154,7 @@ class profiler(QtGui.QWidget):
 
 		#take the green part of the image
 		greenimage = image[:,:,1]
+		globmax = np.max(greenimage)
 
 		#cv2 thingy
  		key = cv2.waitKey(1) & 0xFF
@@ -145,16 +164,29 @@ class profiler(QtGui.QWidget):
 		ypixels = np.linspace(0,len(greenimage[:,0]),len(greenimage[:,0]))
 
 		#row and colum sum for live plots
-		columnsum = greenimage.sum(axis=1)
-		rowsum = greenimage.sum(axis=0)
+		columnsum = greenimage.sum(axis=1)/40.0
+		rowsum = greenimage.sum(axis=0)/40.0
 
 		#subtract minumum value (background subtraction)
 		columnsum = columnsum - np.min(columnsum)
 		rowsum = rowsum - np.min(rowsum)
 
+		#Init Guess for fitting
+		columnampguess = columnsum.max()
+		columncenterguess = np.argmax(columnsum[::-1])
+
+		rowampguess = rowsum.max()
+		rowcenterguess = np.argmax(rowsum)
+		percexp = 100 * globmax/255.0
+		self.expbar.setValue(percexp)
+
 		#Curve fit rowsum and column sum to gaussian, fit parameters returned in popt1/2
-		popt1, pcov1 = curve_fit(self.func, xpixels, rowsum, p0=[80,300,50])
-		popt2, pcov2 = curve_fit(self.func, ypixels, columnsum[::-1], p0=[80,240,50])
+		try:
+			popt1, pcov1 = curve_fit(self.func, xpixels, rowsum, p0=[rowampguess,rowcenterguess,200])
+			popt2, pcov2 = curve_fit(self.func, ypixels, columnsum[::-1], p0=[columnampguess,columncenterguess,200])
+
+		except:
+			popt1, popt2 = [[0,0,1], [0,0,1]]
 
 		#updates data for row and column plots, also mirrors column data
         	self.linesrow.set_xdata(xpixels)
@@ -192,6 +224,10 @@ class profiler(QtGui.QWidget):
     #to be added
     def zoomin(self):
 	pass
+
+    def changeExposure(self, value):
+	scaledvalue = 0.5 * value**2 + 1
+	self.camera.shutter_speed = int(scaledvalue)
 
     #converts nparray to qpixmap
     def nparrayToQPixmap(self, arrayImage):
