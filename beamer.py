@@ -1,33 +1,26 @@
-import XP_g2d as g2d
+"""example script for profiling a beam; starts with a preview and will measure 100 times, roughly 3 seconds per measurement"""
+
+import MT_g2d as g2d
 from beam_profiler_XP import BeamProfiler as bp
 from matplotlib import pylab as pylab
+import numpy as np
 
-"""
-These will be givin user input capabilities later on
-shutter = the speed of the shutter (in ms?)
-a_res = the resolution in the x
-b_res = the resolution in the y
-"""
-#The guessing values depend in some way on a_res and b_res, at least as limits
-shutter = 2000
-a_res = 100
-b_res = 100
+beamProfiler=bp()
 
-b=bp()
-b.take_image(a_res, b_res, shutter)
-#b.image.show()
+for i in range (0,1):
+	"""Preview, and take image"""
+	beamProfiler.take_image_preview()
 
-G2D = g2d.Gaussian2D(b.array, rho=50, x0=30, y0=20, w_a=9, w_b=7)
-print 'w_a = ', G2D.w_a_len, 'm'
-print 'w_b = ', G2D.w_b_len, 'm'
+	'''Find max'''
+	max_img = np.amax(beamProfiler.image_raw)
+	print max_img
 
+	"""Fit image data to Gaussian"""
+	Gauss2D = g2d.Gaussian2D(beamProfiler.array)
 
-"""
-Graphs the gaussian fits in the x and y directions
-''
-row_sum = [sum(b.array[:,i]) for i in xrange(len(b.array[0]))]
-col_sum = [sum(b.array[i,:]) for i in xrange(len(b.array[1]))]
-pylab.plot(row_sum)
-pylab.plot(col_sum)
-pylab.show()
-"""
+	"""Print widths of fit"""
+	print 'w_a = ', Gauss2D._w_a_len, 'mm'
+	print 'w_b = ', Gauss2D._w_b_len, 'mm'
+
+	i = i+1
+
