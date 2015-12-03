@@ -88,7 +88,6 @@ class profiler(QtGui.QWidget):
 	self.axcolumn.set_ylim(0,480)
 	self.axcolumn.set_aspect(3)
 
-
         #Create canvas, label and button widgets
         self.canvasrow = FigureCanvas(self.figurerow)
 	self.canvascolumn = FigureCanvas(self.figurecolumn)
