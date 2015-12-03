@@ -110,16 +110,16 @@ class profiler(QtGui.QWidget):
 	self.canvascolumn.setMaximumWidth(50)
 
 	#add widgets to layout grid
-        layout.addWidget(self.canvasrow,4,0,3,5)
-        layout.addWidget(self.canvascolumn,0,5,5,3)
+        layout.addWidget(self.canvasrow,      4,0,3,5)
+        layout.addWidget(self.canvascolumn,   0,5,5,3)
 
-        layout.addWidget(self.videowindow  ,0,0,5,5)
+        layout.addWidget(self.videowindow,    0,0,5,5)
 
-        layout.addWidget(self.zoominbutton  ,4,11,1,1)
-	layout.addWidget(self.zoomoutbutton  ,4,9,1,1)
+        layout.addWidget(self.zoominbutton,   4,9,1,1)
+	layout.addWidget(self.zoomoutbutton,  4,7,1,1)
 
-        layout.addWidget(self.xwaist  ,3,9,1,1)
-        layout.addWidget(self.ywaist  ,3,10,1,1)
+        layout.addWidget(self.xwaist,         3,7,1,1)
+        layout.addWidget(self.ywaist,         3,9,1,1)
 
 	#connect buttons to functions
         self.zoominbutton.toggled.connect(self.zoomin) 
