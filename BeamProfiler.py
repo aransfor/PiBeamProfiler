@@ -1,3 +1,18 @@
+# Copyright (C) 2015 Anthony Ransford
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 2 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
 from matplotlib.backends.backend_qt4agg import FigureCanvasQTAgg as FigureCanvas
 import matplotlib.pyplot as plt
 from picamera.array import PiRGBArray
@@ -14,7 +29,7 @@ class profiler(QtGui.QWidget):
     
     def __init__(self):
         super(profiler, self).__init__()
-	# initialize the camera and 
+	# initialize the camera
 	self.camera = PiCamera()
 
 	#set camera resolution, gain , sutter speed and framerate
@@ -47,6 +62,7 @@ class profiler(QtGui.QWidget):
 	#Create line objects for fast plot redrawing
         self.linesrow, = self.axrow.plot([],[],linewidth=2,color='purple')
         self.linesrowfit, = self.axrow.plot([],[],linestyle='--',linewidth=2,color='yellow')
+
         self.linescolumn, = self.axcolumn.plot([],[],linewidth=2,color='purple')
 	self.linescolumnfit, = self.axcolumn.plot([],[],linestyle='--',linewidth=2,color='yellow')
 	
@@ -87,9 +103,11 @@ class profiler(QtGui.QWidget):
 	
 	#fixes sizes for display widgets
 	self.videowindow.resize(640,480)
+
 	self.canvasrow.setMinimumHeight(50)
-	self.canvascolumn.setMinimumWidth(50)
 	self.canvasrow.setMaximumHeight(50)
+
+	self.canvascolumn.setMinimumWidth(50)
 	self.canvascolumn.setMaximumWidth(50)
 
 	#add widgets to layout grid
@@ -156,8 +174,9 @@ class profiler(QtGui.QWidget):
 
         	#draw data and flush
         	self.figurerow.canvas.draw()
-        	self.figurecolumn.canvas.draw()
         	self.figurerow.canvas.flush_events()
+
+        	self.figurecolumn.canvas.draw()
         	self.figurecolumn.canvas.flush_events()
 
         	#update X and Y waist labels with scaled waists
