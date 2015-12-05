@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 # Copyright (C) 2015 Anthony Ransford
 #
 # This program is free software: you can redistribute it and/or modify
@@ -25,10 +26,17 @@ from scipy.optimize import curve_fit
 import time, sys
 import cv2
 
-class profiler(QtGui.QWidget):
-    
+class proflayout(QtGui.QWidget):
+
     def __init__(self):
-        super(profiler, self).__init__()
+        super(proflayout, self).__init__()
+	self.zoom = 1
+	self.imageres = [640,480]
+	desktop = QtGui.QDesktopWidget()
+	screensize = desktop.availableGeometry()
+	print screensize
+#	self.screenres = [800,480]
+	self.screenres = [screensize.width(),screensize.height()]
 	# initialize the camera
 	self.camera = PiCamera()
 
@@ -47,104 +55,62 @@ class profiler(QtGui.QWidget):
 	self.initializeGUI()
 
     def initializeGUI(self):
-	#set main geometry and title
-        #self.setGeometry(0, 0, 1000, 500)
-	self.resize(480,310)
-	self.move(0,0)
+
         self.setWindowTitle('Beam Profiler')
+	self.setGeometry(0, 0, self.screenres[0], self.screenres[1])
         layout = QtGui.QGridLayout()
-	layout.setSpacing(10)
 
-        #Set up plot axes and figure positions
-        self.figurerow, self.axrow = plt.subplots()
-	self.figurerow.gca().set_position([0,0,1,1])
+	self.setupPlots()
 
-        self.figurecolumn, self.axcolumn = plt.subplots()
-	self.figurecolumn.gca().set_position([0,0,1,1])
-
-	#Create line objects for fast plot redrawing
-        self.linesrow, = self.axrow.plot([],[],linewidth=2,color='purple')
-        self.linesrowfit, = self.axrow.plot([],[],linestyle='--',linewidth=2,color='yellow')
-
-        self.linescolumn, = self.axcolumn.plot([],[],linewidth=2,color='purple')
-	self.linescolumnfit, = self.axcolumn.plot([],[],linestyle='--',linewidth=2,color='yellow')
-	
-	#axis attributes (mostly stripping borders and tick marks)
-	self.axrow.xaxis.set_ticks_position('none')
-	self.axrow.yaxis.set_ticks_position('none')
-	self.axrow.get_xaxis().set_visible(False)
-	self.axrow.get_yaxis().set_visible(False)
-	self.axrow.patch.set_visible(False)
-
-	self.axcolumn.xaxis.set_ticks_position('none')
-	self.axcolumn.yaxis.set_ticks_position('none')
-	self.axcolumn.get_xaxis().set_visible(False)
-	self.axcolumn.get_yaxis().set_visible(False)
-	self.axcolumn.patch.set_visible(False)
-
-	#set plot limits and aspect ratios
-        self.axrow.set_xlim(0, 640)
-	self.axrow.set_ylim(0,150)
-	self.axrow.set_aspect(0.333)
-
-        self.axcolumn.set_xlim(0, 150)
-	self.axcolumn.set_ylim(0,480)
-	self.axcolumn.set_aspect(3)
-
-        #Create canvas, label and button widgets
 	self.expslider = QtGui.QSlider(QtCore.Qt.Vertical)
 	self.expslider.setSingleStep(1)
 	self.explabel = QtGui.QLabel('Exposure')
-	
 	self.expbar = QtGui.QProgressBar()
 	self.expbar.setOrientation(QtCore.Qt.Vertical)
-	
+	self.expbar.setValue(65)
+	self.videowindow = QtGui.QLabel(self)
+
+	self.xwaist = QtGui.QLabel()
+	self.ywaist = QtGui.QLabel()
+	self.xwaist.setStyleSheet('color: #FF6600; font-weight: bold; font-family: Copperplate / Copperplate Gothic Light, sans-serif') 
+	self.ywaist.setStyleSheet('color: #FF6600; font-weight: bold; font-family: Copperplate / Copperplate Gothic Light, sans-serif')
+	self.zoominbutton = QtGui.QPushButton('Zoom In')
+	self.zoomoutbutton = QtGui.QPushButton('Zoom Out')
+	buttonsize = [int(self.screenres[1]/4 ), int(self.screenres[1]/2)]
+	self.highresbutton = QtGui.QPushButton('1024x768')
+	self.lowresbutton = QtGui.QPushButton('640x480')
+	self.highresbutton.setCheckable(True)
+	self.lowresbutton.setCheckable(True)
+	self.lowresbutton.setChecked(True)
+	self.highresbutton.setFixedSize(buttonsize[0],buttonsize[1])
+	self.lowresbutton.setFixedSize(buttonsize[0],buttonsize[1])
+	self.zoominbutton.setFixedSize(buttonsize[0],buttonsize[1])
+	self.zoomoutbutton.setFixedSize(buttonsize[0],buttonsize[1])
+        self.zoominbutton.toggled.connect(self.zoomin) 
+	self.setupPlots()
         self.canvasrow = FigureCanvas(self.figurerow)
 	self.canvascolumn = FigureCanvas(self.figurecolumn)
 
-	self.videowindow = QtGui.QLabel()
-	self.videowindow.setMaximumHeight(220)
-	self.videowindow.setMaximumWidth(380)
-	self.xwaist = QtGui.QLabel()
-	self.ywaist = QtGui.QLabel()
-
-	self.zoominbutton = QtGui.QPushButton('+')
-	self.zoomoutbutton = QtGui.QPushButton('-')
-	
-	#fixes sizes for display widgets
-
-	self.canvasrow.setMinimumHeight(30)
-	self.canvasrow.setMaximumHeight(30)
-	self.canvasrow.setMinimumWidth(380)
-	self.canvasrow.setMaximumWidth(380)
-
-	self.canvascolumn.setMinimumWidth(30)
-	self.canvascolumn.setMaximumWidth(30)
-
-	#add widgets to layout grid
-#	layout.addWidget(self.explabel,       0,8,1,1)
-#        layout.addWidget(self.expslider,      1,8,1,3)
-#        layout.addWidget(self.expbar,         1,9,1,3)
-
-        layout.addWidget(self.videowindow,    0,0,5,3)
-        layout.addWidget(self.canvasrow,      4,0,4,1)
-        layout.addWidget(self.canvascolumn,   0,4,3,1)
-
-#        layout.addWidget(self.zoominbutton,   5,9,1,1)
-#	layout.addWidget(self.zoomoutbutton,  5,7,1,1)
-
-#        layout.addWidget(self.xwaist,         5,7,1,1)
-#        layout.addWidget(self.ywaist,         6,7,1,1)
-
-	#connect buttons to functions
-        self.zoominbutton.toggled.connect(self.zoomin) 
 	self.expslider.valueChanged[int].connect(self.changeExposure)
+        self.zoominbutton.clicked.connect(self.zoomin) 
+        self.zoomoutbutton.clicked.connect(self.zoomout) 
+	self.lowresbutton.clicked.connect(self.lowres)
+	self.highresbutton.clicked.connect(self.highres)
 
-	self.changeExposure(0)
+	layout.addWidget(self.videowindow,   0,0,2,1)
+	layout.addWidget(self.canvasrow,     2,0,2,1)
+	layout.addWidget(self.canvascolumn,  0,1,2,1)
+	layout.addWidget(self.expslider,     0,5,2,1)
+	layout.addWidget(self.expbar,        0,4,2,1)
+#	layout.addWidget(self.lowresbutton,  0,2)
+#	layout.addWidget(self.highresbutton, 1,2)
+#	layout.addWidget(self.zoominbutton,  0,3)
+#	layout.addWidget(self.zoomoutbutton, 1,3)
+	layout.addWidget(self.xwaist,        2,1)
+	layout.addWidget(self.ywaist,        3,1)
 
-	#set layout
         self.setLayout(layout)
-	
+
     def startCamera(self):
 	# capture frames from the camera
 	for frame in self.camera.capture_continuous(self.rawCapture, format="bgr", use_video_port=True):
@@ -211,23 +177,59 @@ class profiler(QtGui.QWidget):
         	self.figurecolumn.canvas.flush_events()
 
         	#update X and Y waist labels with scaled waists
-		self.xwaist.setText('X waist = ' + str(np.abs(popt1[2]*2*5.875))[0:5] + 'um')
-		self.ywaist.setText('Y waist = ' +str(np.abs(popt2[2]*2*5.875))[0:5]  + 'um')
+		self.xwaist.setText('X = ' + str(np.abs(popt1[2]*2*5.875))[0:5] + 'um')
+		self.ywaist.setText('Y = ' +str(np.abs(popt2[2]*2*5.875))[0:5]  + 'um')
 
 		# convert RGB image np array to qPixmap and update canvas widget
 		qPixmap = self.nparrayToQPixmap(image)
-		self.videowindow.setPixmap(qPixmap)	
+		videoy = int(self.screenres[0]/2.1)
+		videox = int(1.333 * videoy)
+		self.videowindow.setPixmap(qPixmap.scaled(videox,videoy))
  
 		# clear the stream in preparation for the next frame
 		self.rawCapture.truncate(0)
 
-    #to be added
-    def zoomin(self):
-	pass
+    def setupPlots(self):
+
+        #Set up plot axes and figure positions
+        self.figurerow, self.axrow = plt.subplots()
+	#self.figurerow.gca().set_position([0,0,1,1])
+
+        self.figurecolumn, self.axcolumn = plt.subplots()
+	#self.figurecolumn.gca().set_position([0,0,1,1])
+
+	#Create line objects for fast plot redrawing
+        self.linesrow, = self.axrow.plot([],[],linewidth=2,color='purple')
+        self.linesrowfit, = self.axrow.plot([],[],linestyle='--',linewidth=2,color='yellow')
+
+        self.linescolumn, = self.axcolumn.plot([],[],linewidth=2,color='purple')
+	self.linescolumnfit, = self.axcolumn.plot([],[],linestyle='--',linewidth=2,color='yellow')
+
+        self.axrow.set_xlim(0, self.imageres[0])
+	self.axrow.set_ylim(0,300)
+
+        self.axcolumn.set_xlim(0, 300)
+	self.axcolumn.set_ylim(0,self.imageres[1])
+
+	self.axrow.xaxis.set_ticks_position('none')
+	self.axrow.yaxis.set_ticks_position('none')
+	self.axrow.get_xaxis().set_visible(False)
+	self.axrow.get_yaxis().set_visible(False)
+	self.axrow.patch.set_visible(False)
+
+	self.axcolumn.xaxis.set_ticks_position('none')
+	self.axcolumn.yaxis.set_ticks_position('none')
+	self.axcolumn.get_xaxis().set_visible(False)
+	self.axcolumn.get_yaxis().set_visible(False)
+	self.axcolumn.patch.set_visible(False)
 
     def changeExposure(self, value):
 	scaledvalue = 0.5 * value**2 + 1
 	self.camera.shutter_speed = int(scaledvalue)
+
+    #gaussian function used in fitting routine
+    def func(self, x, a, x0, sigma):
+   	return a*np.exp(-(x-x0)**2/(2*sigma**2))
 
     #converts nparray to qpixmap
     def nparrayToQPixmap(self, arrayImage):
@@ -237,15 +239,42 @@ class profiler(QtGui.QWidget):
     	qPixmap = QtGui.QPixmap(qImage)
     	return qPixmap
 
-    #gaussian function used in fitting routine
-    def func(self, x, a, x0, sigma):
-   	return a*np.exp(-(x-x0)**2/(2*sigma**2))
+    #to be added
+    def zoomin(self):
+	if self.zoom >= 10:
+		self.zoom = 10
+	else:
+		self.zoom += 1
+		self.resizePlots()
 
+    def zoomout(self):
+	if self.zoom <= 1:
+		self.zoom = 1
+	else:
+		self.zoom -= 1
+		self.resizePlots()
+
+    def lowres(self):
+	self.highresbutton.setChecked(False)
+
+    def highres(self):
+	self.lowresbutton.setChecked(False)
+
+    def resizePlots(self):
+	gaprow = self.imageres[0]*(self.zoom * 0.04)
+        self.axrow.set_xlim(gaprow, self.imageres[0] - gaprow)
+	self.axrow.set_ylim(0,300)
+
+	gapcolumn = self.imageres[1]*(self.zoom * 0.04)
+        self.axcolumn.set_xlim(0, 300)
+	self.axcolumn.set_ylim(gapcolumn,self.imageres[1] - gapcolumn)
 
 if __name__ == "__main__":
 
     a = QtGui.QApplication([])
-    profilerwidget = profiler()
-    profilerwidget.show()
-    profilerwidget.startCamera()
+    proflayoutwidget = proflayout()
+    proflayoutwidget.show()
+    proflayoutwidget.startCamera()
     sys.exit(a.exec_())
+
+
