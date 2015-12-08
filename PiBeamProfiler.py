@@ -34,16 +34,15 @@ class proflayout(QtGui.QWidget):
 	self.imageres = [640,480]
 	desktop = QtGui.QDesktopWidget()
 	screensize = desktop.availableGeometry()
-	print screensize
-#	self.screenres = [800,480]
 	self.screenres = [screensize.width(),screensize.height()]
+
 	# initialize the camera
 	self.camera = PiCamera()
 
 	#set camera resolution, gain , sutter speed and framerate
-	self.camera.resolution = (640, 480)
-	self.camera.framerate = 33
-	self.camera.shutter_speed = 500
+	self.camera.resolution = (self.imageres[0], self.imageres[1])
+	self.camera.framerate = 33 # in Hz
+	self.camera.shutter_speed = 500 # in us
 	self.camera.exposure_mode = 'off'
 	self.camera.iso = 300
 
@@ -100,12 +99,14 @@ class proflayout(QtGui.QWidget):
 	layout.addWidget(self.videowindow,   0,0,2,1)
 	layout.addWidget(self.canvasrow,     2,0,2,1)
 	layout.addWidget(self.canvascolumn,  0,1,2,1)
-	layout.addWidget(self.expslider,     0,5,2,1)
 	layout.addWidget(self.expbar,        0,4,2,1)
-#	layout.addWidget(self.lowresbutton,  0,2)
-#	layout.addWidget(self.highresbutton, 1,2)
-#	layout.addWidget(self.zoominbutton,  0,3)
-#	layout.addWidget(self.zoomoutbutton, 1,3)
+	#withholds these widgets for tiny screens
+	if not (self.screenres[0] or self.screenres[1] <= 400):
+		layout.addWidget(self.lowresbutton,  0,2)
+		layout.addWidget(self.highresbutton, 1,2)
+		layout.addWidget(self.zoominbutton,  0,3)
+		layout.addWidget(self.zoomoutbutton, 1,3)
+		layout.addWidget(self.expslider,     0,5,2,1)
 	layout.addWidget(self.xwaist,        2,1)
 	layout.addWidget(self.ywaist,        3,1)
 
