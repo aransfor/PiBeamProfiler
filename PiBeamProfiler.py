@@ -42,8 +42,8 @@ class proflayout(QtGui.QWidget):
 
 	#set camera resolution, gain , sutter speed and framerate
 	self.camera.resolution = (640, 480)
-	self.camera.framerate = 33
-	self.camera.shutter_speed = 500
+	self.camera.framerate = 33 # in Hz
+	self.camera.shutter_speed = 500 # in us
 	self.camera.exposure_mode = 'off'
 	self.camera.iso = 300
 
