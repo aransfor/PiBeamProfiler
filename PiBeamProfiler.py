@@ -41,7 +41,7 @@ class proflayout(QtGui.QWidget):
 	self.camera = PiCamera()
 
 	#set camera resolution, gain , sutter speed and framerate
-	self.camera.resolution = (640, 480)
+	self.camera.resolution = (self.imageres[0], self.imageres[1])
 	self.camera.framerate = 33 # in Hz
 	self.camera.shutter_speed = 500 # in us
 	self.camera.exposure_mode = 'off'
