@@ -1,2 +1,4 @@
 *.pyc
 *.py~
+.coverage
+lib/test_gui.py
