@@ -1,0 +1,304 @@
+﻿#********************************************************************************
+#                    General Settings commands
+#********************************************************************************
+
+#********************************************************************************
+#                 FOR RASPBERRY PI VIEWING IN HAMILITON LAB
+#********************************************************************************
+# Remember that the code for the beam profiler runs under the home folder code
+# to access this code go onto cd /code/PiBeamProfiler and here you can edit the 
+# code on a text editor and pull changes from github
+#*********************************************************************************
+
+#*****************************
+#Looking up Information and help
+#help command helps give a summary of a command and how it works
+# write the command name with this at the end to find that information
+--help
+
+#*****************************
+# Moving/Retrieving Tabs/Using Terminal
+#*****************************
+#press alt and then press tab
+
+#move a tab by clicking anywhere and holding alt to move the tab
+
+#press tab to finish typing
+# Example: "Pi" and then tab will finish itself most likely finish to
+# PiBeamProfiler/
+# this works for commands and folder names 
+
+#press up key to retrieve the last thing that was typed and 
+#keep clicking to find more previous commands
+
+#things that are saved or created automatically go to the 
+#home directory category
+
+#*****************************
+# Basic Commands and Updates
+#*****************************
+# This changes the directory that the terminal uses
+# Meaning you can access different folders and directories using this command
+cd foldername/subfoldername
+
+#list the contents in a directory or folder
+#type this after folder name that popped up after the cd command was used
+#this shows everything that is in the folder
+ls 
+
+# CAUTION: keep in mind the pi has to be connected to the internet to be fully updated
+#updating packages
+sudo apt-get update
+
+#upgrading packages
+sudo apt-get upgrade
+
+# This will automatically pop up in the terminal before you type a command
+pi@raspberrypi:/$
+
+#****************************
+#      Configurations
+#****************************
+
+#config.txt
+#*************************
+#this file changes basic settings of the pi such as screen rotation,
+#overscan (whether the screen fits properly), and other things
+
+# To get to the configurations document and modify
+# uncomment things and reboot to apply
+# ctrl X, y, ctrl M to apply
+sudo nano /boot/config.txt #configure the pi document
+	
+	#config.txt  expanded contents: 
+#this file changes basic settings of the pi such as screen rotation,
+#overscan (whether the screen fits properly), and other things
+
+#sudo reboot to apply the new changes to the configuration document
+sudo reboot
+
+#This stuff is on that configuration document
+	# To rotate the display screen
+display_rotate=0 #no rotatatin
+display_rotate=1 #rotate by 90 degrees
+display_rotate=2 #rotate by 180 degrees
+display_rotate=3 #rotate by 270 degrees
+
+	# overscan
+#to change how the display fits the screen change the overscan settings
+#this will be under this file so type this code in
+#overscan directions on the .txt configure document
+
+#rotating the display will mess up the mouse settings on the screen so this might help
+#this will change the x and y axis of the mouse
+$ sudo apt-get install xinput #try this with/ without the $ symbol, not sure which one actually works
+xinput --list
+DISPLAY=:0 xinput --list
+xinput set-prop 'FT5406 memory based driver' 'Evdev Axes Swap' 1
+xinput --set-prop 'FT5406 memory based driver' 'Evdev Axis Inversion' 0 1
+xinput --set-prop 'FT5406 memory based driver' 'Evdev Axis Inversion' 1 0
+
+
+#resolve.conf
+#*********************
+#Access Domain Name System (what it is using for the internet)
+#raspberry pi one says ucla physics domain
+#expanded in internet section
+sudo nano /etc/resolv.conf
+
+#Network Configuration
+#*********************
+#Opening the network configurations
+sudo nano /etc/network/interfaces
+#expanded in internet section
+
+#****************************
+#         Menu
+#****************************
+#Getting to the menu Options
+#getting to different menu options
+# this contains the camera (enable/disable), filesystem, change passowrd, overclock, and about
+sudo raspi-config
+
+
+
+#*****************************************************************************************
+#                          Internet Help/commands
+#*****************************************************************************************
+
+#***********************
+# Common/Frequent Error
+#***********************
+#When you get this error the internet section might help
+#go to internet section to try and resolve this error
+# try fixing the nameservers which is below 
+#add nameservers to network configuration page and then save in the way it says earlier
+
+#Err http://archive.raspberrypi.org wheezy InRelease
+  
+#Err http://mirrordirector.raspbian.org wheezy InRelease
+  
+#Err http://archive.raspberrypi.org wheezy Release.gpg
+ # Temporary failure resolving 'archive.raspberrypi.org'
+#Err http://mirrordirector.raspbian.org wheezy Release.gpg
+#  Temporary failure resolving 'mirrordirector.raspbian.org'
+#Reading package lists... Done
+#W: Failed to fetch http://mirrordirector.raspbian.org/raspbian/dists/wheezy/InRelease  
+
+#W: Failed to fetch http://archive.raspberrypi.org/debian/dists/wheezy/InRelease  
+
+#W: Failed to fetch http://archive.raspberrypi.org/debian/dists/wheezy/Release.gpg  
+#Temporary failure resolving 'archive.raspberrypi.org'
+
+#W: Failed to fetch http://mirrordirector.raspbian.org/raspbian/dists/wheezy/Release.gpg  
+#Temporary failure resolving 'mirrordirector.raspbian.org'
+
+#W: Some index files failed to download. They have been ignored, or old ones used instead.
+
+#*************************
+#Nameservers and Configuring the Pi to google
+#*************************
+#configuring the internet: first edit with this command (interfaces configuration)
+sudo nano /etc/network/interfaces
+
+#these nameservers belong to google
+#add this to the resolve.conf document
+nameserver 8.8.8.8
+nameserver 8.8.4.4
+
+#The top of the document currently says 
+#iface wlan0
+#Replace it at the top with this to get it to work
+auto eth0 #this should be only thing at the top
+
+#find something that looks like this on this document and change the 
+#static to dhcp
+iface eth0 inet dhcp #change the static to dhcp
+
+#************************
+#testing the internet speed 
+#************************
+#enter these commands in this order
+sudo apt-get install python-pip
+sudo easy_install speedtest-cli
+speedtest-cli #outputs the speed
+
+#************************
+# Installing a Better Web Browser
+#************************
+#To install something similar to chrome use this:
+$ sudo apt-get install chromium-browser
+
+#if this does not work use the update command and then rerun chromium
+
+#*****************************************************************************************
+#                          Camera Help/commands
+#*****************************************************************************************
+
+#Getting to the menu Options to Hopefully get the Camera Working
+#this will access camera options
+sudo raspi-config
+
+#Opening up the Camera Options
+raspistill
+
+#taking a picture
+#the last part is the name of the image
+#It will be saved to your user's home directory with this filename 
+raspistill -o image.jpg
+
+#record a video
+raspivid
+
+#To capture a 10 second video with raspberry pi
+raspivid -o video.h264 -t 1000
+
+# open the menu options
+sudo raspi-config
+
+	#Fixing the Camera
+#this might be useful (didnt work for me though)
+#firmware is problem
+# Use the following command to get the very latest (but experimental) firmware:
+#DO NOT USE THIS MADE SOFTWARE NOT WORK
+sudo rpi-update
+
+#Increasing gpu memory
+#go to the config.txt document described in configurations section
+#increase gpu memory so that gpu_mem = 144 #this messed up beam profiler 
+
+
+
+#************************************************************************
+#                    Coding/Using Git and Github
+#************************************************************************
+
+#*******************
+# Installing/Configuring Git
+#*******************
+#installing git 
+sudo apt-get install git
+
+#configure git  
+git config --global user.name "Harry Potter"
+git config --global user.email "h.potter@hogwarts.prof
+
+#text editor (you can use a different text editor this one just sets one 
+# and works fine)
+git config --global core.editor nano
+
+#*******************
+# Basic Commands: 
+# cloning, pushing, pulling
+#*******************
+
+#clone a repository (still figuring out which folder it goes to?)
+#use any website name and have the .git at the end of the github website
+git clone https://github.com/CampbellGroup/PiBeamProfiler.git
+
+#git commands
+git checkout branchname #type in the name you want to checkout
+git branch #shows you which branch you are on
+
+#when the code on the device conflicts with code on the internet, this 
+#command changes the code on the device to match the one on the internet
+git stash 
+
+#shows the differences between code on github and code on device
+git diff
+
+#run the code within a specified directory (you first need to do this using the cd command
+python CodeName.py
+
+#changing the code on the pi in a text editor
+nano PiBeamProfiler.py
+
+	#three steps to change code and send to github on the internet
+# 1
+#use this one when entire files are added to a folder
+git add file name 
+# or this one
+#use this one to see changes made to certain documents already in the folder
+#this goes through your changes one by one and you say whether it is okay to add them
+git add -p
+
+#2
+# write a message of what you changed
+git commit -m "message"
+
+#3
+#send to the internet
+#NEVER PUSH MASTER
+git push origin branchname
+
+	# obtain the code from the internet
+git pull
+
+#running python on the raspberry pi
+# CAUTION you can only run this when you are within the folder this is located which means you still have
+#to run cd code/PiBeamProfiler/ first to access the python code
+python codename.py
+#in the beam profiler's case then run
+python PiBeamProfiler.py
+
+

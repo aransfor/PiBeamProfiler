@@ -1,0 +1,7 @@
+Plan to Implement a Better Guess:
+1. Sort (by using a function possibly) through all the y values for either row or column (will have to do for both)
+ sort to find the index of the value closest to 1/e**2
+2. Return the index of that y value and use for the x array to find the x value that corresponds to this 
+output the number that corresponds to this x array index
+3. Take the absolute value of the outputted number from x array (in case it is on the negative side of the axis)
+and multiply this number by 2 to obtain the beam size (the diameter width)
